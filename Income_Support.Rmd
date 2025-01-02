@@ -1,0 +1,355 @@
+---
+title: "Income Support in Newfoundland and Labrador (2000-2021)"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Introduction
+
+This [RStudio](https://global.rstudio.com/categories/rstudio-ide/) notebook studies a data set on income support recipients in Newfoundland and Labrador, covering a period of over two decades from **2000-2021.** The intention is to try and reveal patterns and trends in the use of income support over time within the province. The data set used in this study was made available online by **Open Data Newfoundland and Labrador.**
+
+```{r}
+  library(tidyverse)
+  library(janitor)
+  library(ggthemes)
+
+  # Disable the display of scientific notation.
+
+  options(scipen=999)
+
+  data <- read.csv("https://opendata.gov.nl.ca/public/opendata/filedownload/?file-id=17327",na.strings = c("..")) |>
+    janitor::clean_names() |>
+    # Restrict our study to communities in Newfoundland and Labrador.
+    filter(geography_type=="Community") |>
+    # Consider all observations made during, or after the year 2000.
+    filter(year>=2000)
+```
+
+# Overview
+
+## What were the total numbers of individuals on income support in Newfoundland and Labrador and how did they change over time?
+
+```{r}
+  data |>
+    distinct(geography,year,.keep_all = TRUE) |>
+    group_by(year) |>
+    filter(!is.na(individuals)) |>
+    summarize(individuals=sum(individuals)) |>
+    ggplot(aes(year)) +
+    geom_line(aes(y=individuals),linewidth=1) +
+    geom_smooth(aes(y=individuals),method="lm",se=FALSE,linewidth=1) +
+    labs(
+      title="Total Number of Individuals on Income Support",
+      x="Year",
+      y="Individuals",
+      subtitle="Newfoundland and Labrador",
+      caption="Data from Open Data Newfoundland and Labrador"
+    )
+```
+
+The total number of individuals on income support represents a small fraction of the population of the entire province. In addition, the number of total income support cases have **decreased** with time.
+
+## How did income support cases across the province vary by age group?
+
+```{r}
+  data |>
+    pivot_longer(
+      cols=c(age_less_than_20,age_20_24,age_25_34,age_35_44,age_45_54,age_55_64,age_65),
+      names_to="age_category",
+      values_to="age_category_number",
+    ) |>
+    mutate(age_category=case_when(
+      age_category == "age_less_than_20" ~ "0-20",
+      age_category == "age_20_24" ~ "20-24",
+      age_category == "age_25_34" ~ "25-34",
+      age_category == "age_35_44" ~ "35-44",
+      age_category == "age_45_54" ~ "45-54",
+      age_category == "age_55_64" ~ "55-64",
+      age_category == "age_65" ~ "65+",
+     )) |>
+     mutate(age_category=factor(age_category)) |>
+    distinct(geography,year,age_category,.keep_all=TRUE) |>
+    drop_na(age_category_number) |>
+    group_by(age_category,year) |>
+    summarize(age_category_number=sum(age_category_number),.groups="keep") |>
+    ggplot(aes(x=year)) +
+    geom_line(aes(y=age_category_number,color=age_category),linewidth=1) +
+    scale_color_colorblind() +
+    labs(
+      title="Income Support Cases By Age Group",
+      subtitle="Newfoundland and Labrador",
+      x="Year",
+      y="Cases",
+      caption="Data from Open Data Newfoundland and Labrador",
+      color="Legend"
+    ) +
+    guides(
+      color=guide_legend(nrow=1,byrow=TRUE)
+    ) +
+    theme(
+      legend.position="bottom"
+    )
+```
+
+The majority of income support cases fall within a specific age range, between **25 and 54.** It is interesting to note that the authors of the data set used here, regard this age range as the "prime" labor force age, yet we can see that the majority of income support recipients fall precisely within this range. The **55-64** age range appears to have seen the largest growth over time.
+
+## What was the employment status of income support cases in the province?
+
+```{r}
+  data |>
+  pivot_longer(
+      cols=c(employment_status_unemployed,employment_status_employed),
+      names_to="employment_status",
+      values_to="employment_status_number",
+    ) |>
+    mutate(employment_status=case_when(
+      employment_status == "employment_status_unemployed" ~ "Unemployed",
+      employment_status == "employment_status_employed" ~ "Employed",
+    )) |>
+    mutate(employment_status=factor(employment_status)) |>
+    distinct(geography,year,employment_status,.keep_all=TRUE) |>
+    drop_na(employment_status_number) |>
+    group_by(employment_status,year) |>
+    summarize(employment_status_number=sum(employment_status_number),.groups="keep") |>
+    ggplot(aes(x=year)) +
+    geom_line(aes(y=employment_status_number,color=employment_status),linewidth=1) +
+    labs(
+      title="Employment Status of Income Support Cases",
+      subtitle="Newfoundland and Labrador",
+      x="Year",
+      y="Cases",
+      caption="Data from Open Data Newfoundland and Labrador",
+      color="Legend"
+    ) +
+    scale_color_colorblind() + theme(
+      legend.position="bottom"
+    )+ guides (
+    color=guide_legend(nrow=1,byrow=TRUE)
+  ) + scale_y_log10()
+```
+
+It is clear that the majority of income support cases fall into the **unemployed** category. There are still hundreds of income support cases in which the individual is **employed,** however. This would seem to indicate a need for many people to supplement their income, despite already being employed.
+
+## What were the main factors that made individuals unavailable for employment?
+
+```{r}
+  data |>
+    pivot_longer(
+      cols=c(employment_availability_not_available_illness,employment_availability_not_available_age_65,employment_availability_not_available_caring_for_spouse_children,employment_availability_not_available_caring_for_other_family_member,employment_availability_not_available_attending_post_secondary,employment_availability_not_interested_in_employment),
+      names_to="employment_availability",
+      values_to="employment_availability_number",
+    ) |>
+  drop_na(employment_availability_number) |>
+  mutate(employment_availability=factor(employment_availability)) |>
+  mutate(employment_availability=case_when(
+    employment_availability == "employment_availability_not_available_illness" ~ "Illness",
+    employment_availability == "employment_availability_not_available_age_65" ~ "Age 65+",
+  employment_availability == "employment_availability_not_available_caring_for_spouse_children" ~ "Caring for Spouse and/or Children",
+  employment_availability == "employment_availability_not_available_caring_for_other_family_member" ~ "Caring for Other Family Member",
+  employment_availability == "employment_availability_not_available_attending_post_secondary" ~ "Attending Post Secondary",
+  employment_availability == "employment_availability_not_interested_in_employment" ~ "Not Interested in Employment",
+  )) |>
+  distinct(geography,year,employment_availability,.keep_all=TRUE) |>
+    group_by(employment_availability,year) |>
+    summarize(employment_availability_number=sum(employment_availability_number),.groups = "keep") |>
+    # There are a couple of outlier values that affect the plotting of the 65+ age
+    # group. These may be the result of data entry errors, or incomplete information.
+    # We will exclude these values before plotting.
+    filter(employment_availability_number != 5) |>
+    ggplot(aes(x=year)) +
+    geom_line(aes(y=employment_availability_number,color=employment_availability),linewidth=1) +
+  scale_color_colorblind() +
+  scale_y_log10() +
+  labs(
+    title="Reasons for Being Unavailable for Employment",
+    subtitle="Newfoundland and Labrador",
+    x="Year",
+    y="Cases",
+    caption="Data from Open Data Newfoundland and Labrador",
+    color="Legend"
+  ) +
+  theme(
+    legend.position="bottom"
+  ) +
+  guides(
+    color=guide_legend(nrow=3,byrow=TRUE)
+  )
+```
+
+The vast majority of income support cases in the province were due to **illness,** making the affected party unavailable for employment. **Caring for a spouse and/or children** was also a common reason for one being unavailable for employment. Note that the records for the **age 65+** group are incomplete.
+
+# Education
+
+## What were the levels of education attained by those on income support?
+
+```{r}
+  data |>
+  pivot_longer(
+      cols=c(education_less_than_grade_7,education_grades_7_to_10,education_grade_11_or_12,education_university_or_professional_graduate,education_other_post_secondary),
+      names_to="education_level",
+      values_to="education_level_number",
+    ) |>
+    mutate(education_level=factor(education_level)) |>
+    mutate(education_level=case_when(
+      education_level=="education_less_than_grade_7" ~ "Less Than Grade 7",
+      education_level=="education_grades_7_to_10" ~ "Grades 7 to 10",
+      education_level=="education_grade_11_or_12" ~ "Grade 11 or 12",
+      education_level=="education_university_or_professional_graduate" ~ "University or Professional Graduate",
+      education_level=="education_other_post_secondary" ~ "Other Post Secondary"
+     )) |>
+  distinct(geography,year,education_level,.keep_all=TRUE) |>
+  drop_na(education_level_number) |>
+  group_by(education_level,year) |>
+  summarize(education_level_number=sum(education_level_number),.groups="keep") |>
+  ggplot(aes(x=year)) +
+  geom_line(aes(y=education_level_number,color=education_level),linewidth=1) +
+  labs(
+    title="Income Support Cases By Education Level",
+    subtitle="Newfoundland and Labrador",
+    x="Year",
+    y="Cases",
+    caption="Data from Open Data Newfoundland and Labrador",
+    color="Legend"
+  ) + theme(
+    legend.position="bottom"
+  ) + guides (
+    color=guide_legend(nrow=3,byrow=TRUE)
+  ) +
+  scale_color_colorblind()
+```
+
+It is clear that two categories, **grades 7 to 10** and **grade 11 or 12,** made up for the majority of income support cases in the province. It is also obvious that the number of cases with a **grade 7 to 10** level of education have been decreasing with time, while the number with a high-school education (**grade 11 or 12**) have actually been **increasing** with time. **Other post secondary** students also saw their numbers **increase.** In contrast, those with a level of education **less than grade 7** have been **decreasing.** The number of **university or professional graduates** have remained low over time, accounting for a small fraction of the total number of income support cases each year.
+
+# Occupations
+
+## What were the occupations of income support cases in the province?
+
+```{r}
+  data |>
+  pivot_longer(
+      cols=c(occupation_labourer,occupation_service_occupation,occupation_fish_catching_and_processing,occupation_homemaker,occupation_student,occupation_other_occupation,occupation_no_occupation_history),
+      names_to="occupation",
+      values_to="occupation_number",
+    ) |>
+    mutate(occupation=factor(occupation)) |>
+    mutate(occupation=case_when(
+      occupation == "occupation_labourer" ~ "Labourer",
+      occupation == "occupation_service_occupation" ~ "Service Worker",
+      occupation == "occupation_fish_catching_and_processing" ~ "Fish Catching and Processing",
+      occupation == "occupation_homemaker" ~ "Homemaker",
+      occupation == "occupation_student" ~ "Student",
+      occupation == "occupation_other_occupation" ~ "Other",
+      occupation == "occupation_no_occupation_history" ~ "No Occupation History"
+    )) |>
+  distinct(geography,year,occupation,.keep_all=TRUE) |>
+  drop_na(occupation_number) |>
+  group_by(occupation,year) |>
+  summarize(occupation_number=sum(occupation_number),.groups = "keep") |>
+  ggplot(aes(x=year)) +
+  geom_line(aes(y=occupation_number,color=occupation),linewidth=1) +
+  labs(
+    title="Income Support Cases By Occupation",
+    subtitle="Newfoundland and Labrador",
+    x="Year",
+    y="Cases",
+    caption="Data from Open Data Newfoundland and Labrador",
+    color="Legend"
+  ) + theme(
+    legend.position="bottom"
+  ) + guides(
+    color=guide_legend(nrow=3,byrow=TRUE)
+  ) + scale_color_colorblind()
+```
+
+The majority of income support cases were employed in **other** occupations than the few explicitly measured. **Laborers** and individuals with **no occupation history** were the next most common, though notably the number of laborers on income support has been **decreasing** with time. **Homemakers,** those involved in **fish catching and processing** and **students** were the least frequent users of income support. The latter three groups each saw a **decrease** in the total number of cases over time.
+
+# Relationship Status and Children
+
+## What was the relationship status of those on income support in the province?
+
+```{r}
+  data |>
+  pivot_longer(
+    cols=c(total_couple_families_with_children,total_couple_families_without_children,total_lone_parent_and_unattached),
+    names_to="relationship_status",
+    values_to="relationship_status_number",
+  ) |>
+  mutate(relationship_status=factor(relationship_status)) |>
+  mutate(relationship_status=case_when(
+    relationship_status == "total_couple_families_with_children" ~ "Families With Children",
+    relationship_status == "total_couple_families_without_children" ~ "Families Without Children",
+    relationship_status == "total_lone_parent_and_unattached" ~ "Single Parents and Unattached Individuals"
+  )) |>
+  drop_na(relationship_status_number) |>
+  distinct(geography,year,relationship_status,.keep_all=TRUE) |>
+  group_by(relationship_status,year) |>
+  summarize(relationship_status_number = sum(relationship_status_number),.groups = "keep") |>
+  ggplot(aes(x=year)) +
+  geom_line(aes(y=relationship_status_number,color=relationship_status),linewidth=1) +
+  scale_color_colorblind() +
+  labs(
+    title="Income Support Cases By Relationship Status",
+    subtitle="Newfoundland and Labrador",
+    x="Year",
+    y="Cases",
+    caption="Data from Open Data Newfoundland and Labrador",
+    color="Legend"
+  ) +
+  scale_y_log10() +
+  theme(
+    legend.position="bottom"
+  )
+```
+
+The majority of families on income support are **without children.** **Single parents and unattached individuals** account for the majority of income support cases in the province.
+
+## How large were the families of individuals with children on income support?
+
+```{r}
+  data |>
+    pivot_longer(
+      cols=c(children_one_child,children_two_children,children_three_or_more_children),
+      names_to="children",
+      values_to="children_number",
+    ) |>
+    mutate(children=factor(children)) |>
+    mutate(children=case_when(
+      children == "children_one_child" ~ "One Child",
+      children == "children_two_children" ~ "Two Children",
+      children == "children_three_or_more_children" ~ "Three or More Children"
+    )) |>
+    distinct(geography,year,children,.keep_all=TRUE) |>
+    group_by(children,year) |>
+    drop_na(children_number) |>
+    summarize(children_number=sum(children_number),.groups = "keep") |>
+    ggplot(aes(x=year)) +
+    geom_line(aes(y=children_number,color=children),linewidth=1) +
+    labs(
+      title="Income Support Cases By Family Size",
+      subtitle="Newfoundland and Labrador",
+      x="Year",
+      y="Cases",
+      caption="Data from Open Data Newfoundland and Labrador",
+      color="Legend"
+    ) +
+    theme(
+      legend.position="bottom"
+    ) +
+    scale_color_colorblind()
+```
+
+The majority of families on income support have **one child.** The number of families on income support with children is demonstrated to have **decreased** over time, regardless of the size of the family. Still, it would seem to indicate that families with **one child** find themselves seeking out financial support the most frequently.
+
+# Conclusion
+
+This study has demonstrated a number of interesting results regarding income support cases in Newfoundland and Labrador. Some of the insights gained from the data are as follows:
+
+- The total number of income support cases across the province is **decreasing** with time.
+- The majority of income support cases fall within a specific age range, **25-54.** This is noted by the authors of the data set used as being the "prime" labor force age range.
+- **Illness** was the primary reason cited for the requirement of income support.
+- **University students and other professional graduates** tend to require the least income support, in terms of levels of education. In contrast, individuals with a **high-school** or **lower grade level** education tended to need the most support.
+- **Single parents and unattached individuals** tended to need the most assistance from income support. In the cases of families with children, whether a single parent or a couple, families with only **one child** tended to need the most support.
+- Many people in the province on income support are also **employed,** in a range of occupations. This (perhaps) indicates that the costs of living have become such that merely having employment is not enough to secure one's finances.
+
+It would take a considerable amount of additional research into the social factors behind the trends demonstrated in this study. In many cases, individuals and families are seeking out income support, despite the individuals in question being **actively employed.** This would seem to indicate a need for many to supplement their income regardless of employment status. It certainly lends some credence to the idea that the cost of living in Newfoundland and Labrador is an issue that must be adequately addressed. It cannot, however, be the **only** reason for the trends observed in this study. Further analysis is required to discover the social context behind these trends.
