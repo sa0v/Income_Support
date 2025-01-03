@@ -131,7 +131,7 @@ The majority of income support cases fall within a specific age range, between *
   ) + scale_y_log10()
 ```
 
-It is clear that the majority of income support cases fall into the **unemployed** category. However, there are some interesting trends revealed. One would naturally expect the **unemployed** to comprise the majority of income support cases in the province. A significant number of cases are also employed **full-time** or **part-time** however, indicating that many who are actively employed still find themselves seeking out income support resources. In both instances, the number of total cases has been **decreasing** with time.
+It is clear that the majority of income support cases fall into the **unemployed** category. However, there are some interesting trends revealed. One would naturally expect the **unemployed** to comprise the majority of income support cases in the province. A significant number of cases are also employed **full-time** or **part-time** however, indicating that many who are actively employed still find themselves seeking out income support resources.
 
 ## What were the main factors that made individuals unavailable for employment?
 
