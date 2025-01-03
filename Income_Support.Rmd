@@ -7,7 +7,7 @@ output:
 
 ## Introduction
 
-This [RStudio](https://global.rstudio.com/categories/rstudio-ide/) notebook studies a data set on income support recipients in Newfoundland and Labrador, covering a period of over two decades from **2000-2021.** The intention is to try and reveal patterns and trends in the use of income support over time within the province. The data set used in this study was made available online by **Open Data Newfoundland and Labrador.**
+This [RStudio](https://global.rstudio.com/categories/rstudio-ide/) notebook studies a data set on income support benefits in Newfoundland and Labrador, covering a period of over two decades from **2000-2021.** The intention is to try and reveal patterns and trends in the use of income support over time within the province. The data set used in this study was made available online by **Open Data Newfoundland and Labrador.**
 
 ```{r}
   library(tidyverse)
@@ -118,7 +118,7 @@ The majority of income support cases fall within a specific age range, between *
       title="Employment Status of Income Support Cases",
       subtitle="Newfoundland and Labrador",
       x="Year",
-      y="Cases",
+      y="Cases (Log. Scale)",
       caption="Data from Open Data Newfoundland and Labrador",
       color="Legend"
     ) +
@@ -165,7 +165,7 @@ It is clear that the majority of income support cases fall into the **unemployed
     title="Reasons for Being Unavailable for Employment",
     subtitle="Newfoundland and Labrador",
     x="Year",
-    y="Cases",
+    y="Cases (Log. Scale)",
     caption="Data from Open Data Newfoundland and Labrador",
     color="Legend"
   ) +
@@ -292,7 +292,7 @@ The majority of income support cases were employed in **other** occupations than
     title="Income Support Cases By Relationship Status",
     subtitle="Newfoundland and Labrador",
     x="Year",
-    y="Cases",
+    y="Cases (Log. Scale)",
     caption="Data from Open Data Newfoundland and Labrador",
     color="Legend"
   ) +
