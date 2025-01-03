@@ -99,13 +99,15 @@ The majority of income support cases fall within a specific age range, between *
 ```{r}
   data |>
   pivot_longer(
-      cols=c(employment_status_unemployed,employment_status_employed),
+      cols=c(employment_status_unemployed,employment_status_part_time,employment_status_full_time,employment_status_own_business),
       names_to="employment_status",
       values_to="employment_status_number",
     ) |>
     mutate(employment_status=case_when(
       employment_status == "employment_status_unemployed" ~ "Unemployed",
-      employment_status == "employment_status_employed" ~ "Employed",
+      employment_status == "employment_status_part_time" ~ "Part-Time",
+      employment_status == "employment_status_full_time" ~ "Full-Time",
+      employment_status == "employment_status_own_business" ~ "Own Business",
     )) |>
     mutate(employment_status=factor(employment_status)) |>
     distinct(geography,year,employment_status,.keep_all=TRUE) |>
@@ -129,7 +131,7 @@ The majority of income support cases fall within a specific age range, between *
   ) + scale_y_log10()
 ```
 
-It is clear that the majority of income support cases fall into the **unemployed** category. There are still hundreds of income support cases in which the individual is **employed,** however. This would seem to indicate a need for many people to supplement their income, despite already being employed.
+It is clear that the majority of income support cases fall into the **unemployed** category. However, there are some interesting trends revealed. One would naturally expect the **unemployed** to comprise the majority of income support cases in the province. A significant number of cases are also employed **full-time** or **part-time** however, indicating that many who are actively employed still find themselves seeking out income support resources. In both instances, the number of total cases has been **decreasing** with time.
 
 ## What were the main factors that made individuals unavailable for employment?
 
@@ -178,6 +180,34 @@ It is clear that the majority of income support cases fall into the **unemployed
 ```
 
 The vast majority of income support cases in the province were due to **illness,** making the affected party unavailable for employment. **Caring for a spouse and/or children** was also a common reason for one being unavailable for employment. Note that the records for the **age 65+** group are incomplete.
+
+## What were the communities with the highest average percentage of individuals on income support?
+
+```{r}
+  data |>
+  group_by(geography) |>
+  summarize(avg_income_support_incidence=mean(income_support_assistance_incidence)) |>
+  arrange(desc(avg_income_support_incidence)) |>
+  slice_head(n=10) |>
+  ggplot(aes(x=reorder(geography,avg_income_support_incidence))) +
+  geom_col(aes(y=avg_income_support_incidence,color="Incidence",fill="Incidence")) +
+  coord_flip() +
+  labs(
+    title="Average Income Support Incidence By Community",
+    subtitle="Newfoundland and Labrador (2000-2021)",
+    x="Average Income Support Incidence",
+    y="Community",
+    caption="Open Data Newfoundland and Labrador",
+  ) +
+  scale_y_continuous(labels=scales::percent) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  theme(
+    legend.position="none"
+  )
+```
+
+The **Municipality of Peterview** had the highest average income support incidence over time.
 
 # Education
 
