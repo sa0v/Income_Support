@@ -181,7 +181,34 @@ It is clear that the majority of income support cases fall into the **unemployed
 
 The vast majority of income support cases in the province were due to **illness,** making the affected party unavailable for employment. **Caring for a spouse and/or children** was also a common reason for one being unavailable for employment. Note that the records for the **age 65+** group are incomplete.
 
-## What were the communities with the highest average percentage of individuals on income support?
+## Which communities had the highest average number of individuals on income support?
+
+```{r}
+  data |>
+  group_by(geography) |>
+  summarize(individuals=mean(individuals)) |>
+  arrange(desc(individuals)) |>
+  slice_head(n=10) |>
+  ggplot(aes(x=reorder(geography,individuals))) +
+  geom_col(aes(y=individuals,color="Individuals",fill="Individuals")) +
+  coord_flip() +
+  theme(
+    legend.position="none"
+  ) +
+  labs(
+    title="Average Individuals on Income Support By Community",
+    subtitle="Newfoundland and Labrador",
+    x="Community",
+    y="Individuals",
+    caption="Data from Open Data Newfoundland and Labrador"
+  ) +
+  scale_fill_colorblind() +
+  scale_color_colorblind()
+```
+
+**St. John's,** a city with a population well over [200,000](https://en.wikipedia.org/wiki/St._John's%2C_Newfoundland_and_Labrador) and the largest in the province, naturally has the highest average number of individuals on income support as well.
+
+## Which communities had the highest average percentage of individuals on income support?
 
 ```{r}
   data |>
