@@ -405,7 +405,7 @@ The majority of families on income support have **one child.** The number of fam
 This study has demonstrated a number of interesting results regarding income support cases in Newfoundland and Labrador. Some of the insights gained from the data are as follows:
 
 - The total number of income support cases across the province is **decreasing** with time.
-- The majority of income support cases fall within a specific age range, **25-54.** This is noted by the authors of the data set used as being the "prime" labor force age range. In addition, the **55-64** age range is one of the few to have shown growth in numbers over time.
+- The majority of income support cases fall within a specific age range, **25-54.** This is noted by the authors of the data set used as being the "prime" labor force age range. In addition, the numbers of cases falling into the **55-64** age range is **increasing** with time.
 - **Illness** was the primary reason cited for the requirement of income support.
 - **University students and other professional graduates** tend to require the least income support, in terms of levels of education. In contrast, individuals with a **high-school** or **grade 7 to 10** education tended to need the most support.
 - **Single parents and unattached individuals** tended to need the most assistance from income support. In the cases of families with children, whether a single parent or a couple, families with only **one child** tended to need the most support.
