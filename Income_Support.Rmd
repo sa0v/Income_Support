@@ -356,6 +356,8 @@ The majority of income support cases were employed in **other** occupations than
   scale_y_log10() +
   theme(
     legend.position="bottom"
+  ) + guides(
+    color=guide_legend(nrow=3,byrow=TRUE)
   )
 ```
 
